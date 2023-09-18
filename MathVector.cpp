@@ -30,7 +30,7 @@ double MathVector::moduleOfVector(MathVector A)
     return sqrt(A.x * A.x + A.y * A.y + A.z * A.z);
 }
 
-double MathVector::cornerBetweenVectors(MathVector A, MathVector B)
+double MathVector::angleBetweenVectors(MathVector A, MathVector B)
 {
     return acos((A * B) / (moduleOfVector(A) * moduleOfVector(B)));
 }

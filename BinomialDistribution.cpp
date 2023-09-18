@@ -1,4 +1,5 @@
 #include "BinomialDistribution.h"
+
 BinomialDistribution::BinomialDistribution(double probabiliy, int countOfExperiments)
 {
     this->p = probabiliy;

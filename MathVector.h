@@ -13,19 +13,13 @@ public:
     MathVector() { }
 
     friend bool operator== (MathVector A, MathVector B); //Vectors are equal if they have same coordinates
-    
-
     friend MathVector operator^ (MathVector A, MathVector B);//Vector Multiplication Of Vectors
-
     friend MathVector operator* (MathVector A, double n);
-
     friend double operator* (MathVector A, MathVector B);
 
     static double moduleOfVector(MathVector A);
-
-    static double cornerBetweenVectors(MathVector A, MathVector B);
+    static double angleBetweenVectors(MathVector A, MathVector B);
 
     double volumeOfParallelepipedOnVectors(MathVector A, MathVector B, MathVector C);
-
     double volumeOfPiramidOnVectors(MathVector A, MathVector B, MathVector C);
 };

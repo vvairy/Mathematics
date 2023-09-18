@@ -5,12 +5,12 @@ Plane::Plane(MathVector normalVector, Dot dotOnLine) : MathVector(normalVector)
     this->normalVector = MathVector(normalVector);
 }
 
-double Plane::cornerBetweenPlanes(Plane A, Plane B)
+double Plane::angleBetweenPlanes(Plane A, Plane B)
 {
     return acos(A.normalVector * B.normalVector / moduleOfVector(A.normalVector) / moduleOfVector(B.normalVector));
 }
 
-double Plane::cornerBetweenLineAndPlane(Line line)
+double Plane::angleBetweenLineAndPlane(Line line)
 {
     return asin(this->normalVector * line.guideVector / moduleOfVector(this->normalVector) / moduleOfVector(line.guideVector));
 }

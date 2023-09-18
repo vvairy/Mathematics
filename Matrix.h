@@ -11,23 +11,22 @@ public:
 	virtual void print();
 	static vector<vector<double>> fillMatrix();
 	int rank();
-	void transpositione();
+	void transpose();
 	std::optional<Matrix> inverseMatrix();
-	const std::vector<double>& operator[] (size_t rowIndex) const;
-	std::vector<double>& operator[] (size_t rowIndex);
 	static std::optional<double> determinant(const Matrix&);
 	Matrix matrixPow(Matrix, size_t);
-	double minor(int, int);
 
-	
+	const std::vector<double>& operator[] (size_t rowIndex) const;
+	std::vector<double>& operator[] (size_t rowIndex);
+	Matrix operator* (const Matrix& M2);
+	Matrix operator*= (double number);
 
 	vector<vector< double >> matrix;
-	size_t row_len;
-	size_t col_len;
-protected:
-	friend Matrix operator*= (Matrix& M, double number);
-	friend Matrix operator* (const Matrix& M1, const Matrix& M2);
+	size_t row_count;
+	size_t col_count;
+	
 private:
 	static bool isMatrixSquare(const Matrix& matrix);
 	static bool isMatrixRectangle(const Matrix& Matrix);
+	double minor(int, int);
 };
