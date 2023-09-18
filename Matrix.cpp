@@ -5,8 +5,8 @@ Matrix::Matrix(const vector<vector<double>> matrix) : matrix(matrix)
     this->col_len = matrix[0].size();
 }
 
-size_t row_len;
-size_t col_len;
+size_t row_count;
+size_t col_count;
 void Matrix::print()
 {
     for (size_t i = 0; i < this->row_len; ++i)
