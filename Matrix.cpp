@@ -1,26 +1,20 @@
 #include "Matrix.h"
-Matrix::Matrix(const vector<vector<double>> matrix) : matrix(matrix) 
-{
-    this->row_count = matrix.size();
-    this->col_count = matrix[0].size();
-}
-
-size_t row_count;
-size_t col_count;
+Matrix::Matrix(const vector<vector<double>> matrix) : matrix(matrix) {}
+Matrix::Matrix(size_t row_len, size_t col_len) : matrix(row_len, vector<double>(col_len)) {}
 
 void Matrix::print()
 {
-    for (size_t i = 0; i < this->row_count; ++i)
+    for (size_t i = 0; i < this->rowCount(); ++i)
     {
-        for (size_t j = 0; j < this->col_count; ++j)
+        for (size_t j = 0; j < this->colCount(); ++j)
             std::cout << this->matrix[i][j] << " ";
         std::cout << std::endl;
     }
 }
 
-vector<vector<double>> Matrix::fillMatrix() 
+Matrix Matrix::fillMatrix() 
 {
-    double row_count, col_count;
+    size_t row_count, col_count;
     std::cout << "Write row count:\n"; std::cin >> row_count;
     std::cout << "Write column count:\n"; std::cin >> col_count;
     vector<vector<double>> matrix(row_count, vector<double>(col_count));
@@ -42,29 +36,29 @@ int Matrix::rank()
 {
     Matrix copyMatrix(*this);
     int rank = 0;
-    for (int i = 0; i < copyMatrix.col_count; i++)
+    for (int i = 0; i < copyMatrix.colCount(); i++)
     {
         int nonZeroRow = rank;
-        while (nonZeroRow < copyMatrix.row_count && copyMatrix[nonZeroRow][i] == 0)
+        while (nonZeroRow < copyMatrix.rowCount() && copyMatrix[nonZeroRow][i] == 0)
             nonZeroRow++;
-        if (nonZeroRow == this->row_count) //if column is fully zero - skip to next iteration
+        if (nonZeroRow == this->rowCount()) //if column is fully zero - skip to next iteration
             continue;
         rank++;
         std::swap(copyMatrix[rank - 1], copyMatrix[nonZeroRow]);
-        for (int j = rank; j < this->row_count; j++)
+        for (int j = rank; j < this->rowCount(); j++)
         {
             int factor = copyMatrix[j][i] / copyMatrix[rank - 1][i];
-            for (int k = i; k < copyMatrix.col_count; k++)
+            for (int k = i; k < copyMatrix.colCount(); k++)
                 copyMatrix[j][k] -= factor * copyMatrix[rank - 1][k];
         }
     }
     return rank;
 }
 
-void Matrix::transpose() //rotate in 90 degrees to left side
+void Matrix::transpose() //rotate in 90 degrees to right side
 {
-    for (size_t i = 0; i < this->row_count; i++)
-        for (size_t j = i; j < this->col_count; j++)
+    for (size_t i = 0; i < this->rowCount(); i++)
+        for (size_t j = i; j < this->colCount(); j++)
             std::swap(this->matrix[i][j], this->matrix[j][i]); 
 }
 
@@ -72,31 +66,55 @@ std::optional<Matrix> Matrix::inverseMatrix()
 {
     if (!isMatrixSquare(this->matrix)) //only square matrixes can be inersed
         return std::nullopt;
+
     double det = determinant(this->matrix).value_or(0);
     if (!det) // if det is 0 matrix has no inverse itself
         return std::nullopt;
-    vector<vector<double>> inversedMatrix(this->row_count, vector<double>(this->col_count));
 
-    for (int i = 0; i < this->row_count; ++i)
-        for (int j = 0; j < this->row_count; ++j)
+    Matrix inversedMatrix(this->rowCount(), this->colCount());
+    for (int i = 0; i < this->rowCount(); ++i)
+        for (int j = 0; j < this->rowCount(); ++j)
             inversedMatrix[i][j] = ::pow(-1, i + j) * minor(i, j) / det;
 
-    Matrix matrix(inversedMatrix); matrix.transpose();
+    inversedMatrix.transpose();
     return matrix;
 }
 
 const std::vector<double>& Matrix::operator[] (size_t rowIndex) const
 {
-    if (rowIndex >= row_count)
+    if (rowIndex >= this->matrix.size())
         throw std::out_of_range("Row index out of range");
     return this->matrix[rowIndex];
 }
 
 std::vector<double>& Matrix::operator[] (size_t rowIndex)
 {
-    if (rowIndex >= row_count)
+    if (rowIndex >= rowCount())
         throw std::out_of_range("Row index out of range");
     return this->matrix[rowIndex];
+}
+
+Matrix Matrix::operator+= (Matrix& anotherMatrix)
+{
+    if (this->matrix.size() != anotherMatrix.matrix.size() or (*this)[0].size() != anotherMatrix[0].size())
+        throw std::exception("non-summariable matrixes");
+
+    for (size_t i = 0; i < anotherMatrix.matrix.size(); ++i)
+        for (size_t j = 0; j < anotherMatrix[0].size(); ++j)
+            (*this)[i][j] += anotherMatrix[i][j];
+    return *this;
+}
+
+Matrix Matrix::operator+ (Matrix& anotherMatrix)
+{
+    if (this->matrix.size() != anotherMatrix.matrix.size() or (*this)[0].size() != anotherMatrix[0].size())
+        throw std::exception("non-summariable matrixes");
+
+    Matrix newMatrix(this->rowCount(), this->colCount());
+    for (size_t i = 0; i < anotherMatrix.matrix.size(); ++i)
+        for (size_t j = 0; j < anotherMatrix[0].size(); ++j)
+            newMatrix[i][j] = (*this)[i][j] + anotherMatrix[i][j];
+    return newMatrix;
 }
 
 std::optional<double> Matrix::determinant(const Matrix& matrix) //https://en.wikipedia.org/wiki/Determinant
@@ -105,14 +123,16 @@ std::optional<double> Matrix::determinant(const Matrix& matrix) //https://en.wik
     {
         std::cout << "Not square Matrix"; return std::nullopt;
     }
-    if (matrix.row_count == 1)
+
+    if (matrix.rowCount() == 1)
         return matrix[0][0];
+
     double det = 0;
-    for (int idx = 0; idx < matrix.row_count; idx++)
+    for (int idx = 0; idx < matrix.rowCount(); idx++)
     {
-        vector<vector<double>> Newmatrix(matrix.row_count - 1);
-        for (size_t i = 1; i < matrix.row_count; i++)
-            for (size_t j = 0; j < matrix.col_count; j++)
+        vector<vector<double>> Newmatrix(matrix.rowCount() - 1);
+        for (size_t i = 1; i < matrix.rowCount(); i++)
+            for (size_t j = 0; j < matrix.colCount(); j++)
                 if (j != idx)
                     Newmatrix[i - 1].push_back(matrix[i][j]);
         det += ::pow(-1, idx) * matrix[0][idx] * determinant(Newmatrix).value(); //recursively calculate the determinant
@@ -123,25 +143,36 @@ std::optional<double> Matrix::determinant(const Matrix& matrix) //https://en.wik
 
 Matrix Matrix::operator* (const Matrix& anotherMatrix) //https://en.wikipedia.org/wiki/Matrix_multiplication
 {
-    if (this->col_count != anotherMatrix.row_count)
+    if (this->colCount() != anotherMatrix.rowCount())
         throw std::exception("Non-multiplyable matrixes");
-    vector<vector<double>> NewMatrix(this->row_count, vector<double>(anotherMatrix.col_count));
-    for (size_t i = 0; i < this->row_count; i++)
-        for (size_t j = 0; j < anotherMatrix.col_count; j++)
+
+    vector<vector<double>> NewMatrix(this->rowCount(), vector<double>(anotherMatrix.colCount()));
+    for (size_t i = 0; i < this->rowCount(); i++)
+        for (size_t j = 0; j < anotherMatrix.colCount(); j++)
         {
             double el = 0;
-            for (size_t idx = 0; idx < col_count; idx++)
+            for (size_t idx = 0; idx < colCount(); idx++)
                 el += (*this)[i][idx] * anotherMatrix[idx][j];
             NewMatrix[i][j] = el;
         }
     return NewMatrix;
 }
 
-Matrix Matrix::matrixPow(Matrix matrix, size_t number)
+Matrix Matrix::operator*= (const Matrix& anotherMatrix) //https://en.wikipedia.org/wiki/Matrix_multiplication
 {
-    if (number == 0)
-        return matrix;
-    return matrix * matrixPow(matrix, number - 1);
+    if (this->colCount() != anotherMatrix.rowCount())
+        throw std::exception("Non-multiplyable matrixes");
+
+    vector<vector<double>> NewMatrix(this->rowCount(), vector<double>(anotherMatrix.colCount()));
+    for (size_t i = 0; i < this->rowCount(); i++)
+        for (size_t j = 0; j < anotherMatrix.colCount(); j++)
+        {
+            double el = 0;
+            for (size_t idx = 0; idx < colCount(); idx++)
+                el += (*this)[i][idx] * anotherMatrix[idx][j];
+            (*this)[i][j] = el;
+        }
+    return (*this);
 }
 
 Matrix Matrix::operator*= (double number) // multipling every matrix number to number
@@ -154,24 +185,24 @@ Matrix Matrix::operator*= (double number) // multipling every matrix number to n
 
 bool Matrix::isMatrixSquare(const Matrix& matrix) // is row len equal column len
 {
-    return matrix.row_count == matrix.col_count && isMatrixRectangle(matrix);
+    return matrix.rowCount() == matrix.colCount() && isMatrixRectangle(matrix);
 }
 
 bool Matrix::isMatrixRectangle(const Matrix& matrix) //are all rows have the same len (so columns too)
 {
-    for (size_t i = 1; i < matrix.row_count; i++)
-        if (matrix.col_count != matrix[i].size()) //every row and col should be the same size
+    for (size_t i = 1; i < matrix.rowCount(); i++)
+        if (matrix.colCount() != matrix[i].size()) //every row and col should be the same size
             return false;
     return true;
 }
 
 double Matrix::minor(int row_idx, int col_idx)
 {
-    vector<vector<double>> smallMatrix(row_count - 1, vector<double>(row_count - 1));
-    for (size_t i = 0, m = 0; i < row_count; ++i)
+    vector<vector<double>> smallMatrix(rowCount() - 1, vector<double>(rowCount() - 1));
+    for (size_t i = 0, m = 0; i < rowCount(); ++i)
         if (i != row_idx)
         {
-            for (size_t j = 0, n = 0; j < col_count; ++j)
+            for (size_t j = 0, n = 0; j < colCount(); ++j)
                 if (j != col_idx)
                 {
                     smallMatrix[m][n] = matrix[i][j];
@@ -180,4 +211,14 @@ double Matrix::minor(int row_idx, int col_idx)
             ++m;
         }
     return determinant(smallMatrix).value();
+}
+
+size_t Matrix::rowCount() const
+{
+    return this->matrix.size();
+}
+
+size_t Matrix::colCount() const
+{
+    return this->matrix[0].size();
 }

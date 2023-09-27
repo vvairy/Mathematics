@@ -13,7 +13,6 @@ void EquationSystem::setVariableMatrix()
     this->variablesMatrix = this->system;
     for (vector<double> row : this->variablesMatrix.matrix)
         row.pop_back();
-    this->variablesMatrix.col_count--;
 }
 std::optional<Matrix> EquationSystem::solveSystemByInversedMatrix()
 {
